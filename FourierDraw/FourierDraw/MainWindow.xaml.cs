@@ -38,6 +38,8 @@ namespace FourierDraw
         }
 
 
+        private BitmapImage inputBitmap;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -48,11 +50,11 @@ namespace FourierDraw
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             var uri = new Uri(System.IO.Path.Combine(Environment.CurrentDirectory, "Lenna.png"));
-            var bitmap = new BitmapImage(uri);
+            inputBitmap = new BitmapImage(uri);
 
-            sourceImage.Source = bitmap;
+            sourceImage.Source = inputBitmap;
 
-            ComplexImage input = BitmapSourceToComplexImage(bitmap);
+            ComplexImage input = BitmapSourceToComplexImage(inputBitmap);
 
             //var pixelDataCompelx = pixelData.Select(_ => new System.Numerics.Complex(_, 0)).ToArray();
             ComplexImage inputFreq = fftshift(fft2(input));
@@ -60,11 +62,13 @@ namespace FourierDraw
             double[] pixelDataFreq = inputFreq.Data.Select(_ => _.Magnitude).ToArray();
             double[] pixelDataFreqNorm = Normalize(pixelDataFreq);
 
-            frequenciesImage.Source = BitmapSourceFromArray(pixelDataFreqNorm, bitmap);
+            frequenciesImage.Source = BitmapSourceFromArray(pixelDataFreqNorm, inputBitmap);
 
 
-            var pixelDataInverse = ifft2(ifftshift(inputFreq));
-            resultImage.Source = BitmapSourceFromArray(pixelDataInverse.Data.Select(_ => _.Magnitude).ToArray(), bitmap);
+            var inverse = ifft2(ifftshift(inputFreq));
+            var inversePixelData = inverse.Data.Select(_ => _.Magnitude).ToArray();
+
+            resultImage.Source = BitmapSourceFromArray(inversePixelData, inputBitmap);
         }
 
         private ComplexImage fft2(ComplexImage img)
@@ -230,6 +234,18 @@ namespace FourierDraw
             
 
             return bitmap;
+        }
+
+        private void inkCanvas_StrokeCollected(object sender, InkCanvasStrokeCollectedEventArgs e)
+        {
+            RenderTargetBitmap renderTarget = new RenderTargetBitmap(inputBitmap.PixelWidth, inputBitmap.PixelHeight, inputBitmap.DpiX, inputBitmap.DpiY, PixelFormats.Pbgra32);
+            renderTarget.Render(inkCanvas);
+
+            int stride = inputBitmap.PixelWidth * (PixelFormats.Pbgra32.BitsPerPixel / 8);
+            byte[] pixels = new byte[inputBitmap.PixelHeight * stride];
+            renderTarget.CopyPixels(pixels, stride, 0);
+
+            // TODO Merge inkCanvas pixels with frequency space
         }
     }
 }

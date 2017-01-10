@@ -1,0 +1,23 @@
+﻿<Window x:Class="FourierDraw.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FourierDraw"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Viewbox>
+        <StackPanel Orientation="Horizontal">
+            <Image Name="sourceImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+
+                <Grid>
+                    <Image Name="frequenciesImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                    <InkCanvas  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}"/>
+                </Grid>
+
+                <Image Name="resultImage" Stretch="None" />
+        </StackPanel>
+        </Viewbox>
+    </Grid>
+</Window>

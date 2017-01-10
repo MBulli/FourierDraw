@@ -16,7 +16,7 @@
                     <InkCanvas  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}"/>
                 </Grid>
 
-                <Image Name="resultImage" Stretch="None" />
+                <Image Name="resultImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
         </StackPanel>
         </Viewbox>
     </Grid>

@@ -46,6 +46,10 @@ namespace FourierDraw
             double[] pixelDataFreqNorm = Normalize(pixelDataFreq);
 
             frequenciesImage.Source = BitmapSourceFromArray(pixelDataFreqNorm, bitmap);
+
+
+            var pixelDataInverse = ifft2(ifftshift(pixelDataCompelx, bitmap.PixelWidth, bitmap.PixelHeight), bitmap.PixelWidth, bitmap.PixelHeight);
+            resultImage.Source = BitmapSourceFromArray(pixelDataInverse.Select(_ => _.Magnitude).ToArray(), bitmap);
         }
 
         private Complex[] fft2(double[] pixelData, int width, int height)
@@ -84,6 +88,42 @@ namespace FourierDraw
             return data;
         }
 
+        private Complex[] ifft2(Complex[] pixelData, int width, int height)
+        {
+            Complex[] data = pixelData;
+
+            // Rows
+            for (int y = 0; y < height; y++)
+            {
+                Complex[] stride = data.Skip(y * width).Take(width).ToArray();
+                Fourier.Inverse(stride, FourierOptions.Matlab);
+
+                for (int x = 0; x < width; x++)
+                {
+                    data[y * width + x] = stride[x];
+                }
+            }
+
+            // Columns
+            for (int x = 0; x < width; x++)
+            {
+                Complex[] col = new Complex[height];
+                for (int y = 0; y < height; y++)
+                {
+                    col[y] = data[y * width + x];
+                }
+
+                Fourier.Inverse(col, FourierOptions.Matlab);
+
+                for (int y = 0; y < height; y++)
+                {
+                    data[y * width + x] = col[y];
+                }
+            }
+
+            return data;
+        }
+
         private Complex[] fftshift(Complex[] data, int width, int height)
         {
             Complex[] result = new Complex[data.Length];
@@ -104,6 +144,11 @@ namespace FourierDraw
             }
 
             return result2;
+        }
+
+        private Complex[] ifftshift(Complex[] data, int width, int height)
+        {
+            return fftshift(data, width, height);
         }
 
         private double[] Normalize(double[] values)

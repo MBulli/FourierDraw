@@ -23,6 +23,21 @@ namespace FourierDraw
     /// </summary>
     public partial class MainWindow : Window
     {
+        class ComplexImage
+        {
+            public readonly Complex[] Data;
+            public readonly int Height;
+            public readonly int Width;
+
+            public ComplexImage(Complex[] data, int height, int width)
+            {
+                Data = data;
+                Height = height;
+                Width = width;
+            }
+        }
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -37,24 +52,27 @@ namespace FourierDraw
 
             sourceImage.Source = bitmap;
 
-            double[] pixelData = BitmapSourceToArray(bitmap);
+            ComplexImage input = BitmapSourceToComplexImage(bitmap);
 
             //var pixelDataCompelx = pixelData.Select(_ => new System.Numerics.Complex(_, 0)).ToArray();
-            var pixelDataCompelx = fftshift(fft2(pixelData, bitmap.PixelWidth, bitmap.PixelHeight), bitmap.PixelWidth, bitmap.PixelHeight);
+            ComplexImage inputFreq = fftshift(fft2(input));
 
-            double[] pixelDataFreq = pixelDataCompelx.Select(_ => _.Magnitude).ToArray();
+            double[] pixelDataFreq = inputFreq.Data.Select(_ => _.Magnitude).ToArray();
             double[] pixelDataFreqNorm = Normalize(pixelDataFreq);
 
             frequenciesImage.Source = BitmapSourceFromArray(pixelDataFreqNorm, bitmap);
 
 
-            var pixelDataInverse = ifft2(ifftshift(pixelDataCompelx, bitmap.PixelWidth, bitmap.PixelHeight), bitmap.PixelWidth, bitmap.PixelHeight);
-            resultImage.Source = BitmapSourceFromArray(pixelDataInverse.Select(_ => _.Magnitude).ToArray(), bitmap);
+            var pixelDataInverse = ifft2(ifftshift(inputFreq));
+            resultImage.Source = BitmapSourceFromArray(pixelDataInverse.Data.Select(_ => _.Magnitude).ToArray(), bitmap);
         }
 
-        private Complex[] fft2(double[] pixelData, int width, int height)
+        private ComplexImage fft2(ComplexImage img)
         {
-            Complex[] data = pixelData.Select(_ => new Complex(_, 0)).ToArray();
+            Complex[] data = (Complex[])img.Data.Clone();
+
+            var width = img.Width;
+            var height = img.Height;
 
             // Rows
             for (int y = 0; y < height; y++)
@@ -85,19 +103,22 @@ namespace FourierDraw
                 }
             }
 
-            return data;
+            return new ComplexImage(data, img.Height, img.Width);
         }
 
-        private Complex[] ifft2(Complex[] pixelData, int width, int height)
+        private ComplexImage ifft2(ComplexImage img)
         {
-            Complex[] data = pixelData;
+            Complex[] data = (Complex[])img.Data.Clone();
+
+            var width = img.Width;
+            var height = img.Height;
 
             // Rows
             for (int y = 0; y < height; y++)
             {
                 Complex[] stride = data.Skip(y * width).Take(width).ToArray();
                 Fourier.Inverse(stride, FourierOptions.Matlab);
-
+                
                 for (int x = 0; x < width; x++)
                 {
                     data[y * width + x] = stride[x];
@@ -121,20 +142,23 @@ namespace FourierDraw
                 }
             }
 
-            return data;
+            return new ComplexImage(data, img.Height, img.Width);
         }
 
-        private Complex[] fftshift(Complex[] data, int width, int height)
+        private ComplexImage fftshift(ComplexImage img)
         {
-            Complex[] result = new Complex[data.Length];
-            Complex[] result2 = new Complex[data.Length];
+            Complex[] result = new Complex[img.Data.Length];
+            Complex[] result2 = new Complex[img.Data.Length];
+
+            var width = img.Width;
+            var height = img.Height;
 
             var halfX = width / 2;
             var halfY = height / 2;
           
             for (int y = 0; y < height; y++)
             {
-                Array.Copy(data, y * width, result, ((halfY + y) % height) * width, width);
+                Array.Copy(img.Data, y * width, result, ((halfY + y) % height) * width, width);
             }
 
             for (int y = 0; y < height; y++)
@@ -143,12 +167,12 @@ namespace FourierDraw
                 Array.Copy(result, y * width + halfX, result2, y * width, halfX);
             }
 
-            return result2;
+            return new ComplexImage(result2, height, width);
         }
 
-        private Complex[] ifftshift(Complex[] data, int width, int height)
+        private ComplexImage ifftshift(ComplexImage img)
         {
-            return fftshift(data, width, height);
+            return fftshift(img);
         }
 
         private double[] Normalize(double[] values)
@@ -171,6 +195,14 @@ namespace FourierDraw
             bitmapSource.CopyPixels(pixels, stride, 0);
 
             return pixels.Select(x => ((double)x)/255).ToArray();
+        }
+
+        private ComplexImage BitmapSourceToComplexImage(BitmapSource bitmapSource)
+        {
+            return new ComplexImage(
+                 BitmapSourceToArray(bitmapSource)?.Select(_ => new Complex(_, 0)).ToArray(),
+                 bitmapSource.PixelHeight,
+                 bitmapSource.PixelWidth);
         }
 
         private BitmapSource BitmapSourceFromArray(double[] pixels, int width, int height, PixelFormat? pixelFormat = null)

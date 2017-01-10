@@ -13,7 +13,7 @@
 
                 <Grid>
                     <Image Name="frequenciesImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                    <InkCanvas  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}"/>
+                    <local:MirroredInkCanvas x:Name="inkCanvas"  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}" />
                 </Grid>
 
                 <Image Name="resultImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />

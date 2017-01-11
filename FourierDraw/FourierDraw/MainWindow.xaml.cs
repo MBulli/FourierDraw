@@ -35,10 +35,19 @@ namespace FourierDraw
                 Height = height;
                 Width = width;
             }
+
+            /// <summary>
+            /// Creates a empty ComplexImage with the same size like template
+            /// </summary>
+            public static ComplexImage CreateEmpty(ComplexImage template)
+            {
+                return new ComplexImage(new Complex[template.Data.Length], template.Height, template.Width);
+            }
         }
 
 
         private BitmapImage inputBitmap;
+        private ComplexImage inputFreqSpace;
 
         public MainWindow()
         {
@@ -55,17 +64,14 @@ namespace FourierDraw
             sourceImage.Source = inputBitmap;
 
             ComplexImage input = BitmapSourceToComplexImage(inputBitmap);
+            inputFreqSpace = fftshift(fft2(input));
 
-            //var pixelDataCompelx = pixelData.Select(_ => new System.Numerics.Complex(_, 0)).ToArray();
-            ComplexImage inputFreq = fftshift(fft2(input));
-
-            double[] pixelDataFreq = inputFreq.Data.Select(_ => _.Magnitude).ToArray();
+            double[] pixelDataFreq = inputFreqSpace.Data.Select(_ => _.Magnitude).ToArray();
             double[] pixelDataFreqNorm = Normalize(pixelDataFreq);
 
             frequenciesImage.Source = BitmapSourceFromArray(pixelDataFreqNorm, inputBitmap);
 
-
-            var inverse = ifft2(ifftshift(inputFreq));
+            var inverse = ifft2(ifftshift(inputFreqSpace));
             var inversePixelData = inverse.Data.Select(_ => _.Magnitude).ToArray();
 
             resultImage.Source = BitmapSourceFromArray(inversePixelData, inputBitmap);
@@ -230,14 +236,13 @@ namespace FourierDraw
             WriteableBitmap bitmap = new WriteableBitmap(template.PixelWidth, template.PixelHeight, template.DpiX, template.DpiY, template.Format, null);
 
             bitmap.WritePixels(new Int32Rect(0, 0, template.PixelWidth, template.PixelHeight), pixelData, template.PixelWidth* (bitmap.Format.BitsPerPixel / 8), 0);
-
-            
-
+          
             return bitmap;
         }
 
         private void inkCanvas_StrokeCollected(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
+            // Render ink to bitmap
             RenderTargetBitmap renderTarget = new RenderTargetBitmap(inputBitmap.PixelWidth, inputBitmap.PixelHeight, inputBitmap.DpiX, inputBitmap.DpiY, PixelFormats.Pbgra32);
             renderTarget.Render(inkCanvas);
 
@@ -245,7 +250,36 @@ namespace FourierDraw
             byte[] pixels = new byte[inputBitmap.PixelHeight * stride];
             renderTarget.CopyPixels(pixels, stride, 0);
 
-            // TODO Merge inkCanvas pixels with frequency space
+            // Gather ink pixels
+            double[] inkPixels = new double[pixels.Length / 4];
+            for (int i = 0, j = 0; i < pixels.Length; i+=4, j++)
+            {
+                // bgr == 0
+                double alpha = pixels[i + 3] / 255.0;
+                inkPixels[j] = alpha;
+            }
+
+            // Combine frequencies and ink
+            ComplexImage modifiedInputFreq = ComplexImage.CreateEmpty(inputFreqSpace);
+            Debug.Assert(inkPixels.Length == modifiedInputFreq.Data.Length);
+
+            for (int i = 0; i < inkPixels.Length; i++)
+            {
+                if (inkPixels[i] > 0)
+                {
+                    // scale frequency by ink stroke
+                    modifiedInputFreq.Data[i] = inputFreqSpace.Data[i] * inkPixels[i];
+                }
+                else
+                {
+                    modifiedInputFreq.Data[i] = inputFreqSpace.Data[i];
+                }
+            }
+
+            var inverse = ifft2(ifftshift(modifiedInputFreq));
+            var inversePixelData = inverse.Data.Select(_ => _.Magnitude).ToArray();
+
+            resultImage.Source = BitmapSourceFromArray(inversePixelData, inputBitmap);
         }
     }
 }

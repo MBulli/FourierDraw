@@ -36,7 +36,7 @@ namespace FourierDraw
             if (!e.Handled)
             {
                 var points = e.GetStylusPoints(this).Select(p => MirrorPoint(Center, p));
-                mirroredStroke = new Stroke(new StylusPointCollection(points));
+                mirroredStroke = new Stroke(new StylusPointCollection(points), DefaultDrawingAttributes);
                 this.Strokes.Add(mirroredStroke);
             }
         }
@@ -70,7 +70,7 @@ namespace FourierDraw
             {
                 if (mirroredStroke == null)
                 {
-                    mirroredStroke = new Stroke(new StylusPointCollection(new StylusPoint[] { MirrorPoint(Center, e.GetPosition(this)) }));
+                    mirroredStroke = new Stroke(new StylusPointCollection(new StylusPoint[] { MirrorPoint(Center, e.GetPosition(this)) }), DefaultDrawingAttributes);
                     this.Strokes.Add(mirroredStroke);
                 }
                 else

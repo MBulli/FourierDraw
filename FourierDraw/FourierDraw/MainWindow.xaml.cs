@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Globalization;
+using System.Windows.Ink;
 
 namespace FourierDraw
 {
@@ -280,6 +282,22 @@ namespace FourierDraw
             var inversePixelData = inverse.Data.Select(_ => _.Magnitude).ToArray();
 
             resultImage.Source = BitmapSourceFromArray(inversePixelData, inputBitmap);
+        }
+    }
+
+    public class DrawingAttributesConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double? input = value as double?;
+            if (input == null) return new DrawingAttributes { Color = Colors.Black };
+            byte byteInput = (byte)input.Value;
+            return new DrawingAttributes { Color = Color.FromRgb(byteInput, byteInput, byteInput) };
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }

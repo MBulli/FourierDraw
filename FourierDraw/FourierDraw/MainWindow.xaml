@@ -6,18 +6,24 @@
         xmlns:local="clr-namespace:FourierDraw"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
+    <Window.Resources>
+        <local:DrawingAttributesConverter x:Key="DrawingAttributesConverter"/>
+    </Window.Resources>
     <Grid>
-        <Viewbox>
-        <StackPanel Orientation="Horizontal">
-            <Image Name="sourceImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        <StackPanel Orientation="Vertical">
+            <Viewbox>
+                <StackPanel Orientation="Horizontal">
+                    <Image Name="sourceImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
 
-                <Grid>
-                    <Image Name="frequenciesImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                    <local:MirroredInkCanvas x:Name="inkCanvas"  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}" StrokeCollected="inkCanvas_StrokeCollected" />
-                </Grid>
+                    <Grid>
+                        <Image Name="frequenciesImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                        <local:MirroredInkCanvas x:Name="inkCanvas"  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}" StrokeCollected="inkCanvas_StrokeCollected" DefaultDrawingAttributes="{Binding ElementName=ColorSlider, Path=Value, Converter={StaticResource DrawingAttributesConverter}}"/>
+                    </Grid>
 
-                <Image Name="resultImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                    <Image Name="resultImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                </StackPanel>
+            </Viewbox>
+            <Slider Name="ColorSlider" Minimum="0" Maximum="255" Height="20" Width="200"/>
         </StackPanel>
-        </Viewbox>
     </Grid>
 </Window>

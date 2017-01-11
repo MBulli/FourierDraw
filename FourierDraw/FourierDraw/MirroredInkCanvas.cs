@@ -84,7 +84,7 @@ namespace FourierDraw
         {
             base.OnMouseUp(e);
 
-            if (!e.Handled && e.LeftButton == MouseButtonState.Pressed)
+            if (!e.Handled && mirroredStroke != null && e.LeftButton == MouseButtonState.Released)
             {
                 mirroredStroke.StylusPoints.Add(MirrorPoint(Center, e.GetPosition(this)));
                 mirroredStroke = null;

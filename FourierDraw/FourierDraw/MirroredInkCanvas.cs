@@ -70,7 +70,7 @@ namespace FourierDraw
             {
                 if (mirroredStroke == null)
                 {
-                    mirroredStroke = new Stroke(new StylusPointCollection(new Point[] { e.GetPosition(this) }));
+                    mirroredStroke = new Stroke(new StylusPointCollection(new StylusPoint[] { MirrorPoint(Center, e.GetPosition(this)) }));
                     this.Strokes.Add(mirroredStroke);
                 }
                 else

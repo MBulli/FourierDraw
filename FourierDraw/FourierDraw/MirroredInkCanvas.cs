@@ -23,6 +23,12 @@ namespace FourierDraw
                                    p2.PressureFactor);
         }
 
+        private StylusPoint MirrorPoint(Point p1, Point p2)
+        {
+            return new StylusPoint(p1.X + (p1.X - p2.X),
+                                   p1.Y + (p1.Y - p2.Y));
+        }
+
         protected override void OnStylusDown(StylusDownEventArgs e)
         {
             base.OnStylusDown(e);
@@ -55,24 +61,22 @@ namespace FourierDraw
                 mirroredStroke = null;
             }
         }
-
-        protected override void OnMouseDown(MouseButtonEventArgs e)
-        {
-            base.OnMouseDown(e);
-
-            if (!e.Handled)
-            {
-
-            }
-        }
-
+        
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
 
-            if (!e.Handled)
+            if (!e.Handled && e.LeftButton == MouseButtonState.Pressed)
             {
-
+                if (mirroredStroke == null)
+                {
+                    mirroredStroke = new Stroke(new StylusPointCollection(new Point[] { e.GetPosition(this) }));
+                    this.Strokes.Add(mirroredStroke);
+                }
+                else
+                {
+                    mirroredStroke.StylusPoints.Add(MirrorPoint(Center, e.GetPosition(this)));
+                }
             }
         }
 
@@ -80,10 +84,13 @@ namespace FourierDraw
         {
             base.OnMouseUp(e);
 
-            if (!e.Handled)
+            if (!e.Handled && e.LeftButton == MouseButtonState.Pressed)
             {
-
+                mirroredStroke.StylusPoints.Add(MirrorPoint(Center, e.GetPosition(this)));
+                mirroredStroke = null;
             }
         }
+
+        
     }
 }

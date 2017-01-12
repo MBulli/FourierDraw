@@ -13,5 +13,12 @@ namespace FourierDraw
     /// </summary>
     public partial class App : Application
     {
+        public string[] StartArgs;
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            StartArgs = e.Args;
+        }
     }
 }

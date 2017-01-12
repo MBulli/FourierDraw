@@ -60,7 +60,7 @@ namespace FourierDraw
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var uri = new Uri(System.IO.Path.Combine(Environment.CurrentDirectory, "Lenna.png"));
+            var uri = new Uri(System.IO.Path.Combine(Environment.CurrentDirectory, ((App)Application.Current).StartArgs[0]));
             inputBitmap = new BitmapImage(uri);
 
             sourceImage.Source = inputBitmap;
@@ -189,7 +189,7 @@ namespace FourierDraw
 
         private double[] Normalize(double[] values)
         {
-            var min = values.Min();         
+            var min = values.Min();
             Debug.Assert(min > 0);
 
             var temp = values.Select(x => Math.Log(x + 1));
@@ -247,7 +247,7 @@ namespace FourierDraw
             // Render ink to bitmap
             RenderTargetBitmap renderTarget = new RenderTargetBitmap(inputBitmap.PixelWidth, inputBitmap.PixelHeight, inputBitmap.DpiX, inputBitmap.DpiY, PixelFormats.Pbgra32);
             renderTarget.Render(inkCanvas);
-
+            
             int stride = inputBitmap.PixelWidth * (PixelFormats.Pbgra32.BitsPerPixel / 8);
             byte[] pixels = new byte[inputBitmap.PixelHeight * stride];
             renderTarget.CopyPixels(pixels, stride, 0);
@@ -270,7 +270,7 @@ namespace FourierDraw
                 if (inkPixels[i] > 0)
                 {
                     // scale frequency by ink stroke
-                    modifiedInputFreq.Data[i] = inputFreqSpace.Data[i] * inkPixels[i];
+                    modifiedInputFreq.Data[i] = inputFreqSpace.Data[i] * (1-inkPixels[i]);
                 }
                 else
                 {

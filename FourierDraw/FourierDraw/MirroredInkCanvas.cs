@@ -14,7 +14,9 @@ namespace FourierDraw
     {
         private Stroke mirroredStroke;
 
-        private Point Center => new Point(this.ActualWidth / 2, this.ActualHeight / 2);
+        public Point CenterFactor = new Point(0.5, 0.5);
+
+        private Point Center => new Point(this.ActualWidth * CenterFactor.X, this.ActualHeight * CenterFactor.Y);
 
         private StylusPoint MirrorPoint(Point p1, StylusPoint p2)
         {

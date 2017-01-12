@@ -77,6 +77,10 @@ namespace FourierDraw
             var inversePixelData = inverse.Data.Select(_ => _.Magnitude).ToArray();
 
             resultImage.Source = BitmapSourceFromArray(inversePixelData, inputBitmap);
+
+            inkCanvas.CenterFactor = new Point(
+                (inputBitmap.PixelWidth / 2 + 0.5) / inputBitmap.PixelWidth,
+                (inputBitmap.PixelHeight / 2 + 0.5) / inputBitmap.PixelHeight);
         }
 
         private ComplexImage fft2(ComplexImage img)
@@ -189,9 +193,6 @@ namespace FourierDraw
 
         private double[] Normalize(double[] values)
         {
-            var min = values.Min();
-            Debug.Assert(min > 0);
-
             var temp = values.Select(x => Math.Log(x + 1));
             var max = temp.Max();
 

@@ -18,6 +18,14 @@ namespace FourierDraw
 
         private Point Center => new Point(this.ActualWidth * CenterFactor.X, this.ActualHeight * CenterFactor.Y);
 
+
+
+        public bool IsMirrorEnabled
+        {
+            get { return (bool)GetValue(IsMirrorEnabledProperty); }
+            set { SetValue(IsMirrorEnabledProperty, value); }
+        }
+
         private StylusPoint MirrorPoint(Point p1, StylusPoint p2)
         {
             return new StylusPoint(p1.X + (p1.X - p2.X),
@@ -35,7 +43,7 @@ namespace FourierDraw
         {
             base.OnStylusDown(e);
 
-            if (!e.Handled)
+            if (!e.Handled && !e.Inverted && IsMirrorEnabled)
             {
                 var points = e.GetStylusPoints(this).Select(p => MirrorPoint(Center, p));
                 mirroredStroke = new Stroke(new StylusPointCollection(points), DefaultDrawingAttributes);
@@ -47,7 +55,7 @@ namespace FourierDraw
         {
             base.OnStylusMove(e);
 
-            if (!e.Handled && !e.InAir)
+            if (!e.Handled && !e.InAir && !e.Inverted && IsMirrorEnabled)
             {
                 mirroredStroke.StylusPoints.Add(new StylusPointCollection(e.GetStylusPoints(this).Select(p => MirrorPoint(Center, p))));
             }
@@ -57,7 +65,7 @@ namespace FourierDraw
         {
             base.OnStylusUp(e);
 
-            if (!e.Handled)
+            if (!e.Handled && !e.Inverted && IsMirrorEnabled)
             {
                 mirroredStroke.StylusPoints.Add(new StylusPointCollection(e.GetStylusPoints(this).Select(p => MirrorPoint(Center, p))));
                 mirroredStroke = null;
@@ -68,7 +76,7 @@ namespace FourierDraw
         {
             base.OnMouseMove(e);
 
-            if (!e.Handled && e.LeftButton == MouseButtonState.Pressed)
+            if (!e.Handled && e.LeftButton == MouseButtonState.Pressed && e.StylusDevice == null && IsMirrorEnabled)
             {
                 if (mirroredStroke == null)
                 {
@@ -86,13 +94,15 @@ namespace FourierDraw
         {
             base.OnMouseUp(e);
 
-            if (!e.Handled && mirroredStroke != null && e.LeftButton == MouseButtonState.Released)
+            if (!e.Handled && mirroredStroke != null && e.LeftButton == MouseButtonState.Released && e.StylusDevice == null && IsMirrorEnabled)
             {
                 mirroredStroke.StylusPoints.Add(MirrorPoint(Center, e.GetPosition(this)));
                 mirroredStroke = null;
             }
         }
 
-        
+
+        public static readonly DependencyProperty IsMirrorEnabledProperty =
+            DependencyProperty.Register(nameof(IsMirrorEnabled), typeof(bool), typeof(MirroredInkCanvas), new PropertyMetadata(true));
     }
 }

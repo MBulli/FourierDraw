@@ -243,12 +243,12 @@ namespace FourierDraw
             return bitmap;
         }
 
-        private void inkCanvas_StrokeCollected(object sender, InkCanvasStrokeCollectedEventArgs e)
+        private void CalculateNewImage()
         {
             // Render ink to bitmap
             RenderTargetBitmap renderTarget = new RenderTargetBitmap(inputBitmap.PixelWidth, inputBitmap.PixelHeight, inputBitmap.DpiX, inputBitmap.DpiY, PixelFormats.Pbgra32);
             renderTarget.Render(inkCanvas);
-            
+
             int stride = inputBitmap.PixelWidth * (PixelFormats.Pbgra32.BitsPerPixel / 8);
             byte[] pixels = new byte[inputBitmap.PixelHeight * stride];
             renderTarget.CopyPixels(pixels, stride, 0);
@@ -259,7 +259,7 @@ namespace FourierDraw
             {
                 // bgr == 0
                 double alpha = pixels[i + 3] / 255.0;
-                inkPixels[j] = alpha;
+                inkPixels[j] = alpha;                
             }
 
             // Combine frequencies and ink
@@ -284,16 +284,63 @@ namespace FourierDraw
 
             resultImage.Source = BitmapSourceFromArray(inversePixelData, inputBitmap);
         }
+
+        private void inkCanvas_StrokeCollected(object sender, InkCanvasStrokeCollectedEventArgs e)
+        {
+            CalculateNewImage();
+        }
+
+        private void inkCanvas_StrokeErased(object sender, RoutedEventArgs e)
+        {
+            CalculateNewImage();
+        }
+
+        private void restButton_Click(object sender, RoutedEventArgs e)
+        {
+            inkCanvas.Strokes.Clear();
+            CalculateNewImage();
+        }
+
     }
 
-    public class DrawingAttributesConverter : IValueConverter
+    public class DrawingAttributesConverter : IMultiValueConverter
+    {
+        public object Convert(object[] value, Type targetType, object parameter, CultureInfo culture)
+        {
+            Color color = Colors.Black;
+            double size = 5;
+
+            double? colorInput = value.ElementAtOrDefault(0) as double?;
+            double? sizeInput = value.ElementAtOrDefault(1) as double?;
+
+            if (colorInput != null)
+            {
+                byte byteInput = (byte)colorInput.Value;
+                color = Color.FromRgb(byteInput, byteInput, byteInput);
+            }
+
+            if (sizeInput != null)
+            {
+                size = sizeInput.Value;
+            }
+
+            return new DrawingAttributes { Color = color, Width = size, Height = size };
+        }
+
+        public object[] ConvertBack(object value, Type[] targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class SliderValueToGrayColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             double? input = value as double?;
             if (input == null) return new DrawingAttributes { Color = Colors.Black };
             byte byteInput = (byte)input.Value;
-            return new DrawingAttributes { Color = Color.FromRgb(byteInput, byteInput, byteInput) };
+            return new SolidColorBrush(Color.FromRgb(byteInput, byteInput, byteInput));
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

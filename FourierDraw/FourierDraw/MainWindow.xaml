@@ -8,6 +8,7 @@
         Title="MainWindow" Height="350" Width="525">
     <Window.Resources>
         <local:DrawingAttributesConverter x:Key="DrawingAttributesConverter"/>
+        <local:SliderValueToGrayColorConverter x:Key="SliderValueToGrayColorConverter" />
     </Window.Resources>
     <Grid>
         <StackPanel Orientation="Vertical">
@@ -17,13 +18,33 @@
 
                     <Grid>
                         <Image Name="frequenciesImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                        <local:MirroredInkCanvas x:Name="inkCanvas"  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}" StrokeCollected="inkCanvas_StrokeCollected" DefaultDrawingAttributes="{Binding ElementName=ColorSlider, Path=Value, Converter={StaticResource DrawingAttributesConverter}}"/>
+                        <local:MirroredInkCanvas x:Name="inkCanvas"  Background="Transparent" Width="{Binding ActualWidth, ElementName=frequenciesImage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=frequenciesImage, Mode=OneWay}" StrokeCollected="inkCanvas_StrokeCollected" StrokeErased="inkCanvas_StrokeErased">
+                            <local:MirroredInkCanvas.DefaultDrawingAttributes>
+                                <MultiBinding Converter="{StaticResource DrawingAttributesConverter}">
+                                    <Binding ElementName="ColorSlider" Path="Value" />
+                                    <Binding ElementName="StrokeSizeSlider" Path="Value" />
+                                </MultiBinding>
+                            </local:MirroredInkCanvas.DefaultDrawingAttributes>
+                        </local:MirroredInkCanvas>
                     </Grid>
 
                     <Image Name="resultImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
                 </StackPanel>
             </Viewbox>
-            <Slider Name="ColorSlider" Minimum="0" Maximum="255" Height="20" Width="200"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Rectangle Width="25" Height="25" Stroke="Black" Fill="{Binding Value, Converter={StaticResource SliderValueToGrayColorConverter }, ElementName=ColorSlider}"  Margin="10"/>
+                <Slider Name="ColorSlider" Minimum="0" Maximum="255" Height="20" Width="255"/>
+                <TextBlock Text="{Binding Value, ElementName=ColorSlider, StringFormat=##0}" VerticalAlignment="Center" Margin="10" Width="25" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Slider Name="StrokeSizeSlider" Minimum="1" Maximum="255" Height="20" Width="255" Margin="45,0,0,0" />
+                <TextBlock Text="{Binding Value, ElementName=StrokeSizeSlider, StringFormat=##0}" VerticalAlignment="Center" Margin="10" Width="25" />
+            </StackPanel>
+            
+            <CheckBox Name="mirrorStrokesCheckbox" Content="Mirror strokes" Margin="10" IsChecked="{Binding IsMirrorEnabled, ElementName=inkCanvas}" HorizontalAlignment="Center" />
+            <Button Name="restButton" Content="Clear" Width="100" Height="30" Click="restButton_Click" />
+
+            
         </StackPanel>
     </Grid>
 </Window>
